@@ -1,2 +1,2 @@
 //
-import './vue/config'
+import './vue/config';
