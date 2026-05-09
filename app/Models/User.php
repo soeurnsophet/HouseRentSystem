@@ -10,12 +10,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['gender_id', 'name', 'username', 'email', 'phone', 'photo', 'role', 'disabled'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    // Relationships gender to user
+    public function gender()
+    {
+        return $this->belongsTo(Gender::class);
+    }
 
     /**
      * Get the attributes that should be cast.
