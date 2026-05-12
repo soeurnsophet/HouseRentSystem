@@ -23,6 +23,29 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Gender::class);
     }
+    public function buildings()
+    {
+        return $this->hasMany(Building::class, 'created_by');
+    }
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'created_by');
+    }
+
+    public function tenantBookings()
+    {
+        return $this->hasMany(Booking::class, 'tenant_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'created_by');
+    }
+
+    public function bills()
+    {
+        return $this->hasMany(Bill::class, 'created_by');
+    }
 
     /**
      * Get the attributes that should be cast.
