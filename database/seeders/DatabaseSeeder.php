@@ -18,22 +18,19 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
+        User::factory(500)->create();
+        // $this->call([
+        //     GenderSeeder::class,
         // ]);
-        $this->call([
-            GenderSeeder::class,
-        ]);
 
-        User::factory()->create([
-            'name' => 'Soeurn Sophet',
-            'username' => 'sophet',
-            'password' => Hash::make('phet123'),
-            'phone' => '081638188',
-            'email' => 'soeurnsophet@gmail.com',
-            'role' => 'admin',
-            'gender_id' => 1,
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Soeurn Sophet',
+        //     'username' => 'sophet',
+        //     'password' => Hash::make('phet123'),
+        //     'phone' => '081638188',
+        //     'email' => 'soeurnsophet@gmail.com',
+        //     'role' => 'admin',
+        //     'gender_id' => 1,
+        // ]);
     }
 }

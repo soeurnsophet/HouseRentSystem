@@ -1,5 +1,14 @@
 <script setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import api from "../services/api";
+import { useToast } from "primevue";
+import { MessageError, MessageSuccess } from "../utils/Message";
+import userAuthStore from "../stores/auth.store";
+
+const router = useRouter();
+const toast = useToast();
+const auth = userAuthStore(); // use auth store
 
 const form = reactive({
     phone: "",
@@ -11,12 +20,14 @@ const isSubmitting = ref(false);
 const errorMessage = ref({
     phone: "",
     password: "",
+    general: "",
 });
 
-const submitLogin = () => {
+const submitLogin = async () => {
     errorMessage.value = {
         phone: "",
         password: "",
+        general: "",
     };
 
     let hasError = false;
@@ -34,11 +45,18 @@ const submitLogin = () => {
     if (hasError) return;
 
     isSubmitting.value = true;
+    try {
+        const { success, message } = await auth.login(form);
 
-    // Simulate API Call
-    setTimeout(() => {
-        isSubmitting.value = false;
-    }, 700);
+        if (success) {
+            MessageSuccess(message, message, toast);
+            router.push({ name: "dashboard" });
+        } else {
+            MessageError(message, message, toast);
+        }
+    } catch (error) {
+        MessageError(error.message, error.message, toast);
+    }
 };
 </script>
 
@@ -67,6 +85,14 @@ const submitLogin = () => {
             </div>
 
             <form class="space-y-5" @submit.prevent="submitLogin">
+                <Message
+                    v-if="errorMessage.general"
+                    severity="error"
+                    size="small"
+                >
+                    {{ errorMessage.general }}
+                </Message>
+
                 <!-- Phone Field -->
                 <div class="space-y-2">
                     <label
@@ -154,7 +180,7 @@ const submitLogin = () => {
                     type="submit"
                     label="Sign In"
                     icon="pi pi-sign-in"
-                    :loading="isSubmitting"
+                    :loading="auth.isLoading"
                     class="w-full p-3"
                 />
             </form>
