@@ -43,10 +43,7 @@ const userAuthStore = defineStore("auth", () => {
         }
     };
 
-    // Logout
-    const logout = async () => {
-        await api.post("/logout");
-
+    const clearAuth = () => {
         localStorage.removeItem("access_token");
 
         localStorage.removeItem("user");
@@ -58,6 +55,28 @@ const userAuthStore = defineStore("auth", () => {
         isAuthenticated.value = false;
     };
 
+    // Logout
+    const logout = async () => {
+        try {
+            const accessToken = token.value || localStorage.getItem("access_token");
+
+            if (accessToken) {
+                await api.post(
+                    "/logout",
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    },
+                );
+            }
+        } finally {
+            clearAuth();
+        }
+    };
+
+
     return {
         user,
         token,
@@ -65,6 +84,7 @@ const userAuthStore = defineStore("auth", () => {
         isLoading,
         login,
         logout,
+        clearAuth,
     };
 });
 

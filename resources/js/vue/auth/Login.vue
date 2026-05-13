@@ -1,12 +1,12 @@
 <script setup>
-import { onMounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
-import api from "../services/api";
+import { onMounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useToast } from "primevue";
 import { MessageError, MessageSuccess } from "../utils/Message";
 import userAuthStore from "../stores/auth.store";
 
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 const auth = userAuthStore(); // use auth store
 
@@ -22,6 +22,19 @@ const errorMessage = ref({
     password: "",
     general: "",
 });
+
+const showRouteMessage = () => {
+    if (!route.query.message) return;
+
+    const message = String(route.query.message);
+
+    errorMessage.value.general = message;
+    MessageError("Forbidden", message, toast);
+};
+
+onMounted(showRouteMessage);
+
+watch(() => route.query.message, showRouteMessage);
 
 const submitLogin = async () => {
     errorMessage.value = {
@@ -58,6 +71,7 @@ const submitLogin = async () => {
         MessageError(error.message, error.message, toast);
     }
 };
+
 </script>
 
 <template>
@@ -85,14 +99,6 @@ const submitLogin = async () => {
             </div>
 
             <form class="space-y-5" @submit.prevent="submitLogin">
-                <Message
-                    v-if="errorMessage.general"
-                    severity="error"
-                    size="small"
-                >
-                    {{ errorMessage.general }}
-                </Message>
-
                 <!-- Phone Field -->
                 <div class="space-y-2">
                     <label

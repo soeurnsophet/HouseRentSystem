@@ -24,11 +24,16 @@ class AuthController extends Controller
         $credentials['phone'] = $this->normalizePhone($credentials['phone']);
 
         $user = User::where('phone', $credentials['phone'])
-            ->where('disabled', false)
             ->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        if ($user->disabled == 1) {
+            return response()->json([
+                'message' => 'Your account has been disabled'
+            ], 403);
         }
         $user->tokens()->delete();
 
