@@ -16,7 +16,6 @@ class UserController extends Controller
 
         $users = User::query()
             ->with('gender:id,gender_en_full')
-            ->where('disabled', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -76,16 +75,9 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:6'],
             'role' => ['required', Rule::in(['admin', 'manager', 'user'])],
             'gender_id' => ['nullable', 'exists:genders,id'],
         ]);
-
-        if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
 
         $user->update($data);
 
@@ -95,12 +87,39 @@ class UserController extends Controller
         ]);
     }
 
+    public function disabledUser(User $user)
+    {
+        $user->update(['disabled' => !$user->disabled]);
+        return response()->json([
+            'message' => 'User disabled successfully.',
+            'disabled' => $user->disabled
+        ]);
+    }
+
     public function destroy(User $user)
     {
-        $user->update(['disabled' => true]);
+        $user->delete();
 
         return response()->json([
             'message' => 'User deleted successfully.',
+        ]);
+    }
+
+
+    // change password
+
+    public function changePassword(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $data['password'] = Hash::make($data['password']);
+
+        $user->update($data);
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
         ]);
     }
 }

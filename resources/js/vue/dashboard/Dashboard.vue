@@ -15,14 +15,14 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="h-screen overflow-hidden bg-slate-50 text-slate-950 lg:flex">
+    <div class="flex h-dvh overflow-hidden bg-slate-50 text-slate-950">
         <Sidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div class="flex h-full min-h-0 min-w-0 flex-1 flex-col">
             <Header @toggle-sidebar="sidebarOpen = true" />
 
             <main class="dashboard-scroll min-h-0 flex-1 overflow-y-auto">
-                <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto w-full max-w-8xl px-4 py-6 sm:px-6 lg:px-8">
                     <RouterView />
                 </div>
             </main>

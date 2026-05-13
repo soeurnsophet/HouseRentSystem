@@ -5,12 +5,22 @@ import { useDialog } from "primevue/usedialog";
 import useUserStore from "../../stores/users.store";
 import CreateUser from "./Create.vue";
 import UpdateUser from "./Update.vue";
+import ChangePassword from "./ChangePassword.vue";
+import { useToast } from "primevue";
+import { MessageSuccess } from "../../utils/Message";
 
 const dialog = useDialog();
+const toast = useToast();
 const userStore = useUserStore();
 const { users, meta, loading, deleting } = storeToRefs(userStore);
 const deleteDialogVisible = ref(false);
 const selectedUser = ref(null);
+// Drawer
+const visibleRight = ref(false);
+const selectedRow = ref(null);
+
+// toggle
+const checked = ref(false);
 
 const lazyParams = reactive({
     first: 0,
@@ -81,6 +91,7 @@ const openEditDialog = (user) => {
         props: {
             header: "Edit User",
             modal: true,
+            draggable: false,
             style: {
                 width: "42rem",
             },
@@ -91,6 +102,7 @@ const openEditDialog = (user) => {
         },
         onClose: (options) => {
             if (options?.data?.updated) {
+                visibleRight.value = false;
                 fetchUsers();
             }
         },
@@ -100,6 +112,7 @@ const openEditDialog = (user) => {
 const confirmDelete = (user) => {
     selectedUser.value = user;
     deleteDialogVisible.value = true;
+    visibleRight.value = false;
 };
 
 const deleteUser = async () => {
@@ -118,6 +131,60 @@ const deleteUser = async () => {
 };
 
 onMounted(fetchUsers);
+
+const openDrawer = (data) => {
+    selectedRow.value = data;
+    visibleRight.value = true;
+};
+
+// change password
+const openChangePasswordDialog = (user) => {
+    dialog.open(ChangePassword, {
+        data: {
+            user,
+        },
+        props: {
+            position: "top",
+            header: "Change Password",
+            modal: true,
+            draggable: false,
+            // style: {
+            //     width: "24vw",
+            // },
+            breakpoints: {
+                "960px": "75vw",
+                "640px": "90vw",
+            },
+        },
+        onClose: (options) => {
+            if (options?.data?.updated) {
+                visibleRight.value = false;
+                fetchUsers();
+            }
+        },
+    });
+};
+// disabled user
+const toggleUserStatus = async (user) => {
+    try {
+        const { success, message, disabled } = await userStore.disableUser(
+            user.id,
+            {
+                disabled: user.disabled,
+            },
+        );
+
+        if (success) {
+            console.log(disabled);
+
+            const msg = disabled == 1 ? message : "User undisabled";
+            MessageSuccess("", msg, toast);
+            fetchUsers();
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
 </script>
 
 <template>
@@ -126,11 +193,6 @@ onMounted(fetchUsers);
             class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
         >
             <div>
-                <p
-                    class="text-sm font-medium uppercase tracking-wide text-teal-700"
-                >
-                    Management
-                </p>
                 <h1 class="mt-2 text-3xl font-semibold text-slate-950">
                     Users
                 </h1>
@@ -178,6 +240,7 @@ onMounted(fetchUsers);
                 data-key="id"
                 striped-rows
                 responsive-layout="scroll"
+                class="p-datatable-sm"
                 @page="onPage"
             >
                 <Column header="No" class="w-20">
@@ -199,7 +262,63 @@ onMounted(fetchUsers);
                         <Tag :value="data.role" severity="info" />
                     </template>
                 </Column>
-                <Column header="Actions" class="w-36">
+
+                <Column header="Disable">
+                    <template #body="{ data }">
+                        <ToggleSwitch
+                            :modelValue="data.disabled === 1"
+                            @update:modelValue="
+                                (val) => toggleUserStatus(data, val)
+                            "
+                        />
+                    </template>
+                </Column>
+                <Column header="Actions" class="w-8">
+                    <template #body="{ data }">
+                        <div class="flex justify-center">
+                            <Button
+                                icon="pi pi-ellipsis-h"
+                                severity="success"
+                                rounded
+                                variant="outlined"
+                                @click="openDrawer(data)"
+                            />
+                        </div>
+                    </template>
+                </Column>
+                <!-- drawer for action udpate and delete -->
+                <Drawer
+                    v-model:visible="visibleRight"
+                    header="Actions"
+                    position="right"
+                    class="w-80"
+                >
+                    <div class="flex flex-col justify-between h-full">
+                        <div class="flex flex-col gap-3">
+                            <Button
+                                label="Update"
+                                icon="pi pi-pencil"
+                                severity="secondary"
+                                @click="openEditDialog(selectedRow)"
+                            />
+
+                            <Button
+                                label="Change Password"
+                                severity="secondary"
+                                @click="openChangePasswordDialog(selectedRow)"
+                            />
+                        </div>
+
+                        <Button
+                            label="Delete"
+                            icon="pi pi-trash"
+                            severity="danger"
+                            @click="confirmDelete(selectedRow)"
+                        />
+                    </div>
+                </Drawer>
+
+                <!-- <Column header="Actions" class="w-36">
                     <template #body="{ data }">
                         <div class="flex gap-2">
                             <Button
@@ -218,7 +337,7 @@ onMounted(fetchUsers);
                             />
                         </div>
                     </template>
-                </Column>
+                </Column> -->
             </DataTable>
         </div>
 

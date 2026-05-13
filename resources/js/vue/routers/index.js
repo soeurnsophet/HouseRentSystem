@@ -7,10 +7,10 @@ import Users from "../pages/users/Users.vue";
 import userAuthStore from "../stores/auth.store";
 
 const routes = [
-    { path: "/", component: Home },
+    // { path: "/", component: Home },
     { path: "/login", component: Login, name: "Login" },
     {
-        path: "/dashboard",
+        path: "/",
         component: Dashboard,
         name: "dashboard",
         meta: { requiresAuth: true },
@@ -29,7 +29,6 @@ const router = createRouter({
 
 router.beforeEach((to, from) => {
     const auth = userAuthStore();
-    console.log(auth.isAuthenticated);
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
         return { name: "Login" };

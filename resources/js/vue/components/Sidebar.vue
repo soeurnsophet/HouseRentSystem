@@ -39,7 +39,7 @@ const navigation = [
             >
                 <RouterLink
                     class="flex items-center gap-3"
-                    to="/home"
+                    to="{ name: 'dashboard' }"
                     @click="$emit('close')"
                 >
                     <span

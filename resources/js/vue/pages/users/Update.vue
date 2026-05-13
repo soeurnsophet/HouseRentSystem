@@ -17,7 +17,6 @@ const form = reactive({
     username: user.username,
     email: user.email,
     phone: user.phone,
-    password: "",
     role: user.role,
     gender_id: user.gender_id,
 });
@@ -50,10 +49,6 @@ const updateUser = async () => {
         role: form.role,
         gender_id: form.gender_id,
     };
-
-    if (form.password) {
-        payload.password = form.password;
-    }
 
     try {
         const res = await userStore.updateUser(form.id, payload);
@@ -178,34 +173,7 @@ const updateUser = async () => {
                 option-label="label"
                 option-value="value"
                 class="w-full"
-                show-clear
             />
-        </div>
-
-        <div class="space-y-2 md:col-span-2">
-            <label
-                class="text-sm font-medium text-slate-700"
-                for="update-password"
-            >
-                Password (leave blank to keep current)
-            </label>
-            <Password
-                id="update-password"
-                v-model="form.password"
-                class="w-full"
-                input-class="w-full"
-                :feedback="false"
-                toggle-mask
-                :invalid="!!fieldError('password')"
-            />
-            <Message
-                v-if="fieldError('password')"
-                severity="error"
-                size="small"
-                variant="simple"
-            >
-                {{ fieldError("password") }}
-            </Message>
         </div>
 
         <div class="flex justify-end gap-3 md:col-span-2">

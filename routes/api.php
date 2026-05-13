@@ -15,6 +15,9 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('/users', UserController::class);
+        // change user password
+        Route::put('/users/{user}/password', [UserController::class, 'changePassword']);
+        Route::put('/users/{user}/disabled', [UserController::class, 'disabledUser']);
         // Logout route
         Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     });

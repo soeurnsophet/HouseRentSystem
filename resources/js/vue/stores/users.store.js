@@ -68,6 +68,36 @@ const useUserStore = defineStore("users", () => {
         }
     };
 
+    const verifyChangePassword = async (id, payload) => {
+        try {
+            const { data } = await userService.verifyChangePassword(
+                id,
+                payload,
+            );
+            return {
+                success: true,
+                message: data.message,
+            };
+        } finally {
+            saving.value = false;
+        }
+    };
+
+    // disable user
+
+    const disableUser = async (id) => {
+        try {
+            const { data } = await userService.disabledUser(id);
+            return {
+                success: true,
+                message: data.message,
+                disabled: data.disabled,
+            };
+        } finally {
+            saving.value = false;
+        }
+    };
+
     return {
         users,
         meta,
@@ -78,6 +108,8 @@ const useUserStore = defineStore("users", () => {
         createUser,
         updateUser,
         deleteUser,
+        verifyChangePassword,
+        disableUser,
     };
 });
 
