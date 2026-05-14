@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "../pages/Home.vue";
 import Login from "../auth/Login.vue";
 import Dashboard from "../dashboard/Dashboard.vue";
-import DashboardHome from "../pages/Home.vue";
 import Users from "../pages/users/Users.vue";
 import userAuthStore from "../stores/auth.store";
 
@@ -16,7 +15,7 @@ const routes = [
         meta: { requiresAuth: true },
         redirect: { name: "home" },
         children: [
-            { path: "home", name: "home", component: DashboardHome },
+            { path: "home", name: "home", component: Home },
             { path: "users", name: "users", component: Users },
         ],
     },

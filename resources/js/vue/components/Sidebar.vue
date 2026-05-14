@@ -9,8 +9,12 @@ defineProps({
 defineEmits(["close"]);
 
 const navigation = [
-    { label: "Dashboard", icon: "pi pi-chart-bar", to: { name: "dashboard" } },
-    { label: "Users", icon: "pi pi-users", to: { name: "users" } },
+    {
+        label: "Dashboard",
+        icon: "fa-solid fa-gauge-high",
+        to: { name: "dashboard" },
+    },
+    { label: "Users", icon: "fa-solid fa-user-group", to: { name: "users" } },
     // { label: "Rooms", icon: "pi pi-home", to: "/rooms" },
     // { label: "Bookings", icon: "pi pi-calendar", to: "/bookings" },
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },

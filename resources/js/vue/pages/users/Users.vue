@@ -148,12 +148,12 @@ const openChangePasswordDialog = (user) => {
             header: "Change Password",
             modal: true,
             draggable: false,
-            // style: {
-            //     width: "24vw",
-            // },
+            style: {
+                width: "42vw",
+            },
             breakpoints: {
-                "960px": "75vw",
-                "640px": "90vw",
+                "960px": "45vw",
+                "640px": "42vw",
             },
         },
         onClose: (options) => {
@@ -185,6 +185,16 @@ const toggleUserStatus = async (user) => {
         console.log(error);
     }
 };
+const getSeverity = (user) => {
+    switch (user.role) {
+        case "admin":
+            return "danger";
+        case "manager":
+            return "warning";
+        default:
+            return "info";
+    }
+};
 </script>
 
 <template>
@@ -203,7 +213,7 @@ const toggleUserStatus = async (user) => {
 
             <Button
                 label="Add User"
-                icon="pi pi-plus"
+                icon="fa-solid fa-user-plus"
                 @click="openCreateDialog"
             />
         </div>
@@ -259,28 +269,30 @@ const toggleUserStatus = async (user) => {
                 </Column>
                 <Column field="role" header="Role">
                     <template #body="{ data }">
-                        <Tag :value="data.role" severity="info" />
+                        <Tag :value="data.role" :severity="getSeverity(data)" />
                     </template>
                 </Column>
 
-                <Column header="Disable">
+                <Column header="Disable" class="w-5">
                     <template #body="{ data }">
-                        <ToggleSwitch
-                            :modelValue="data.disabled === 1"
-                            @update:modelValue="
-                                (val) => toggleUserStatus(data, val)
-                            "
-                        />
+                        <div class="flex justify-center">
+                            <ToggleSwitch
+                                :modelValue="data.disabled === 1"
+                                @update:modelValue="
+                                    (val) => toggleUserStatus(data, val)
+                                "
+                            />
+                        </div>
                     </template>
                 </Column>
                 <Column header="Actions" class="w-8">
                     <template #body="{ data }">
                         <div class="flex justify-center">
                             <Button
-                                icon="pi pi-ellipsis-h"
-                                severity="success"
+                                icon="fa-solid fa-gears"
+                                severity="info"
+                                text
                                 rounded
-                                variant="outlined"
                                 @click="openDrawer(data)"
                             />
                         </div>
@@ -296,22 +308,23 @@ const toggleUserStatus = async (user) => {
                     <div class="flex flex-col justify-between h-full">
                         <div class="flex flex-col gap-3">
                             <Button
-                                label="Update"
-                                icon="pi pi-pencil"
-                                severity="secondary"
+                                label="Update User Info"
+                                icon="fa-solid fa-pen-to-square"
+                                severity="confirm"
                                 @click="openEditDialog(selectedRow)"
                             />
 
                             <Button
                                 label="Change Password"
-                                severity="secondary"
+                                icon="fa-solid fa-lock"
+                                severity="contrast"
                                 @click="openChangePasswordDialog(selectedRow)"
                             />
                         </div>
 
                         <Button
                             label="Delete"
-                            icon="pi pi-trash"
+                            icon="fa-solid fa-trash"
                             severity="danger"
                             @click="confirmDelete(selectedRow)"
                         />

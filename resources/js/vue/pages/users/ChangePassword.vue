@@ -66,10 +66,10 @@ const updatePassword = async () => {
         </div>
 
         <!-- Buttons -->
-        <div class="flex flex-col md:flex-row md:justify-end gap-2 pt-4">
+        <div class="flex flex-col-reverse md:flex-row md:justify-end gap-2 pt-4">
             <Button
                 label="Cancel"
-                icon="pi pi-times"
+                icon="fa-solid fa-ban"
                 severity="secondary"
                 outlined
                 type="button"
@@ -77,8 +77,8 @@ const updatePassword = async () => {
             />
 
             <Button
-                label="Update Password"
-                icon="pi pi-key"
+                label="Reset Password"
+                icon="fa-solid fa-key"
                 type="submit"
                 :loading="saving"
             />
