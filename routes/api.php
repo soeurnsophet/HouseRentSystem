@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,10 @@ Route::prefix('v1')->group(function () {
         // change user password
         Route::put('/users/{user}/password', [UserController::class, 'changePassword']);
         Route::put('/users/{user}/disabled', [UserController::class, 'disabledUser']);
+
+
+        // building
+        Route::apiResource('/buildings', BuildingController::class);
         // Logout route
         Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     });

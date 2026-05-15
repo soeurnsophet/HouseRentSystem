@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Building;
+use App\Policies\BuildingPolicy;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,4 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         //
     }
+
+    protected $policies = [
+        Building::class => BuildingPolicy::class
+    ];
 }

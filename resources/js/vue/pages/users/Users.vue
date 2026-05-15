@@ -277,7 +277,7 @@ const getSeverity = (user) => {
                     <template #body="{ data }">
                         <div class="flex justify-center">
                             <ToggleSwitch
-                                :modelValue="data.disabled === 1"
+                                :modelValue="data.disabled !== 1"
                                 @update:modelValue="
                                     (val) => toggleUserStatus(data, val)
                                 "
