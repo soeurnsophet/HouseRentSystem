@@ -5,6 +5,7 @@ import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura";
 import ToastService from "primevue/toastservice";
 import DialogService from "primevue/dialogservice";
+import ConfirmationService from "primevue/confirmationservice";
 // Pinia
 import { createPinia } from "pinia";
 // Routers
@@ -24,6 +25,7 @@ app.use(PrimeVue, {
 });
 app.use(ToastService);
 app.use(DialogService);
+app.use(ConfirmationService);
 app.use(pinia);
 app.use(router);
 app.mount("#app");

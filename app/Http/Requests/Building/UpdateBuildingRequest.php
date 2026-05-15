@@ -28,7 +28,6 @@ class UpdateBuildingRequest extends FormRequest
             'building_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'created_by' => ['nullable', 'exists:users,id'],
         ];
     }
 }

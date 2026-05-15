@@ -17,4 +17,12 @@ class Building extends Model
     {
         return $this->hasMany(Floor::class);
     }
+
+    public function rooms()
+    {
+        return $this->hasManyThrough(
+            Room::class,
+            Floor::class
+        );
+    }
 }

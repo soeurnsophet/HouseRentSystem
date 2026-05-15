@@ -2,6 +2,7 @@
 import { Toast } from "primevue";
 </script>
 <template>
+    <ConfirmDialog></ConfirmDialog>
     <Toast />
     <DynamicDialog />
     <router-view />

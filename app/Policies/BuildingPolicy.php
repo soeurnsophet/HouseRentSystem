@@ -29,8 +29,7 @@ class BuildingPolicy
      */
     public function create(User $user): bool
     {
-        $user = $user->role == 'admin' || $user->role == 'manager' ? true : false;
-        return $user;
+        return $user->role === 'admin' || $user->role === 'manager';
     }
 
     /**
@@ -47,7 +46,7 @@ class BuildingPolicy
      */
     public function delete(User $user, Building $building): bool
     {
-        return $user->id == 'admin' || $user->id == $building->created_by;
+        return $user->role === 'admin' || $user->id === $building->created_by;
     }
 
     /**

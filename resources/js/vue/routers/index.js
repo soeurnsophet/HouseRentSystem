@@ -4,12 +4,13 @@ import Login from "../auth/Login.vue";
 import Dashboard from "../dashboard/Dashboard.vue";
 import Users from "../pages/users/Users.vue";
 import userAuthStore from "../stores/auth.store";
+import Building from "../pages/building/Building.vue";
 
 const routes = [
     // { path: "/", component: Home },
     { path: "/login", component: Login, name: "Login" },
     {
-        path: "/",
+        path: "/dashboard",
         component: Dashboard,
         name: "dashboard",
         meta: { requiresAuth: true },
@@ -17,6 +18,7 @@ const routes = [
         children: [
             { path: "home", name: "home", component: Home },
             { path: "users", name: "users", component: Users },
+            { path: "buildings", name: "buildings", component: Building },
         ],
     },
 ];

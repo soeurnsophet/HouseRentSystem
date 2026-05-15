@@ -15,6 +15,11 @@ const navigation = [
         to: { name: "dashboard" },
     },
     { label: "Users", icon: "fa-solid fa-user-group", to: { name: "users" } },
+    {
+        label: "Buildings",
+        icon: "fa-solid fa-building",
+        to: { name: "buildings" },
+    },
     // { label: "Rooms", icon: "pi pi-home", to: "/rooms" },
     // { label: "Bookings", icon: "pi pi-calendar", to: "/bookings" },
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },

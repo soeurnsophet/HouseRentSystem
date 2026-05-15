@@ -16,7 +16,14 @@ class BuildingController extends Controller
      */
     public function index()
     {
-        $buildings = Building::all();
+        $buildings = Building::withCount([
+            'floors',
+            'rooms',
+            'rooms as available_rooms' => fn($query) => $query->where('status', 'available'),
+        ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return [
             'buildings' => $buildings,
         ];
@@ -28,6 +35,7 @@ class BuildingController extends Controller
     public function store(StoreBuildingRequest $request)
     {
         $data = $request->validated();
+        $data['created_by'] = $request->user()->id;
 
         $building = Building::create($data);
 

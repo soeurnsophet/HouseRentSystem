@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Building;
 
+use App\Models\Building;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,8 +13,7 @@ class StoreBuildingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $building = $this->route('building');
-        return $this->user()->can('create', $building);;
+        return $this->user()->can('create', Building::class);
     }
 
     /**
@@ -27,7 +27,6 @@ class StoreBuildingRequest extends FormRequest
             'building_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'created_by' => ['nullable', 'exists:users,id'],
         ];
     }
 }
