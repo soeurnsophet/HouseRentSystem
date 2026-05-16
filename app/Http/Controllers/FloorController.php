@@ -9,9 +9,10 @@ class FloorController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = min((int) $request->integer('per_page', 10), 100);
+        $perPage = min((int) $request->integer('per_page', 5), 100);
         $building_id = $request->building_id;
         $floors = Floor::query()
+            ->with('building')
             ->withCount('rooms')
             ->when($building_id, function ($query) use ($building_id) {
                 $query->where('building_id', $building_id);
