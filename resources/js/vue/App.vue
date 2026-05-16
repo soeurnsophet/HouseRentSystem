@@ -33,4 +33,9 @@ body::-webkit-scrollbar-thumb {
         scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
     }
 }
+::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+}
 </style>

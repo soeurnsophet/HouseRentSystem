@@ -20,6 +20,11 @@ const navigation = [
         icon: "fa-solid fa-building",
         to: { name: "buildings" },
     },
+    {
+        label: "Floors",
+        icon: "fa-solid fa-building-columns",
+        to: { name: "floors" },
+    },
     // { label: "Rooms", icon: "pi pi-home", to: "/rooms" },
     // { label: "Bookings", icon: "pi pi-calendar", to: "/bookings" },
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },

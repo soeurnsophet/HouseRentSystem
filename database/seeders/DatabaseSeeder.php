@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory(500)->create();
+        // User::factory(500)->create();
+
         // $this->call([
         //     GenderSeeder::class,
         // ]);
@@ -32,5 +33,9 @@ class DatabaseSeeder extends Seeder
         //     'role' => 'admin',
         //     'gender_id' => 1,
         // ]);
+
+        $this->call([
+            FloorSeeder::class,
+        ]);
     }
 }
