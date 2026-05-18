@@ -22,7 +22,6 @@ return new class extends Migration
             $table->decimal('rate', 10, 2)->default(0);
 
             $table->text('description')->nullable();
-            $table->boolean('active')->default(true);
 
             $table->timestamps();
         });
