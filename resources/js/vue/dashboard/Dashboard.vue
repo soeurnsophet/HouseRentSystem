@@ -9,7 +9,7 @@ const sidebarOpen = ref(false);
 const auth = userAuthStore();
 
 onMounted(() => {
-    auth.logout();
+    // auth.logout();
 });
 </script>
 

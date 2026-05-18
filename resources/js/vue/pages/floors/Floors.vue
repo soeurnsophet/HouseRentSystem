@@ -20,6 +20,7 @@ const lazyParams = reactive({
     first: 0,
     page: 0,
     rows: 10,
+    search: "",
     totalRecords: 0,
 });
 
@@ -27,9 +28,20 @@ const fetchFloors = async () => {
     await floorStore.fetchFloors({
         page: lazyParams.page + 1,
         per_page: lazyParams.rows,
+        search: lazyParams.search || undefined,
     });
 
     lazyParams.totalRecords = meta.value.total || 0;
+};
+
+let searchTimer;
+const onSearch = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        lazyParams.first = 0;
+        lazyParams.page = 0;
+        fetchFloors();
+    }, 300);
 };
 
 const onPage = (event) => {
@@ -148,6 +160,13 @@ const toggle = (event, floor) => {
     selectedFloor.value = floor;
     menu.value.toggle(event);
 };
+
+const clearSearch = () => {
+    lazyParams.search = "";
+    lazyParams.first = 0;
+    lazyParams.page = 0;
+    fetchFloors();
+};
 </script>
 <template>
     <section class="space-y-5">
@@ -171,7 +190,31 @@ const toggle = (event, floor) => {
         </div>
         <!-- Table -->
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div class="mb-4 flex justify-end">
+            <div
+                class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+                <div class="flex items-center gap-3">
+                    <IconField class="w-full md:w-80">
+                        <InputIcon class="pi pi-search text-slate-400" />
+                        <InputText
+                            v-model="lazyParams.search"
+                            class="w-full rounded-xl"
+                            placeholder="Search floors..."
+                            @input="onSearch"
+                            @keydown.enter="onSearch"
+                        />
+                    </IconField>
+
+                    <Button
+                        v-if="lazyParams.search"
+                        icon="fa-solid fa-filter-circle-xmark"
+                        severity="secondary"
+                        outlined
+                        rounded
+                        @click="clearSearch"
+                    />
+                </div>
+
                 <span class="text-sm text-slate-500">
                     Showing {{ floors.length }} of
                     {{ lazyParams.totalRecords }} floors
@@ -203,6 +246,10 @@ const toggle = (event, floor) => {
 
                         <p class="text-lg font-semibold text-slate-700">
                             No floors found
+                        </p>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Try changing your search keyword.
                         </p>
                     </div>
                 </template>

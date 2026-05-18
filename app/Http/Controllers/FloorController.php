@@ -11,11 +11,23 @@ class FloorController extends Controller
     {
         $perPage = min((int) $request->integer('per_page', 5), 100);
         $building_id = $request->building_id;
+        $search = $request->string('search')->toString();
+
         $floors = Floor::query()
             ->with('building')
             ->withCount('rooms')
             ->when($building_id, function ($query) use ($building_id) {
                 $query->where('building_id', $building_id);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('base_price', 'like', "%{$search}%")
+                        ->orWhereHas('building', function ($query) use ($search) {
+                            $query->where('building_name', 'like', "%{$search}%");
+                        });
+                });
             })
             ->latest()
             ->paginate($perPage);
