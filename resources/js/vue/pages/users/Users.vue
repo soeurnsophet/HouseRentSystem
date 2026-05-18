@@ -8,6 +8,7 @@ import UpdateUser from "./Update.vue";
 import ChangePassword from "./ChangePassword.vue";
 import { useToast } from "primevue";
 import { MessageSuccess } from "../../utils/Message";
+import { value } from "@primeuix/themes/aura/knob";
 
 const dialog = useDialog();
 const toast = useToast();
@@ -28,6 +29,7 @@ const lazyParams = reactive({
     rows: 10,
     totalRecords: 0,
     search: "",
+    role: null,
 });
 
 const fetchUsers = async () => {
@@ -35,6 +37,7 @@ const fetchUsers = async () => {
         page: lazyParams.page + 1,
         per_page: lazyParams.rows,
         search: lazyParams.search || undefined,
+        role: lazyParams.role || undefined,
     });
 
     lazyParams.totalRecords = meta.value.total;
@@ -57,7 +60,11 @@ const onSearch = () => {
         fetchUsers();
     }, 300);
 };
-
+const onRoleChange = () => {
+    lazyParams.first = 0;
+    lazyParams.page = 0;
+    fetchUsers();
+};
 // Dialog Create User
 const openCreateDialog = () => {
     dialog.open(CreateUser, {
@@ -195,6 +202,19 @@ const getSeverity = (user) => {
             return "info";
     }
 };
+
+const roles = ref([
+    { label: "Admin", value: "admin" },
+    { label: "Manager", value: "manager" },
+    { label: "User", value: "user" },
+]);
+const onClearFilter = () => {
+    lazyParams.first = 0;
+    lazyParams.page = 0;
+    lazyParams.search = null;
+    lazyParams.role = null;
+    fetchUsers();
+};
 </script>
 
 <template>
@@ -219,23 +239,44 @@ const getSeverity = (user) => {
         </div>
 
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div
-                class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-            >
-                <IconField class="w-full md:max-w-sm">
-                    <InputIcon class="pi pi-search" />
-                    <InputText
-                        v-model="lazyParams.search"
-                        class="w-full"
-                        placeholder="Search name, phone, email"
-                        @input="onSearch"
-                    />
-                </IconField>
+            <div class="mb-6">
+                <div
+                    class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+                >
+                    <div
+                        class="flex flex-col gap-3 md:flex-row md:items-center"
+                    >
+                        <IconField class="w-full md:w-80">
+                            <InputIcon class="pi pi-search text-slate-400" />
 
-                <span class="text-sm text-slate-500">
-                    Showing {{ users.length }} of
-                    {{ lazyParams.totalRecords }} users
-                </span>
+                            <InputText
+                                v-model="lazyParams.search"
+                                placeholder="Search users..."
+                                class="w-full"
+                                @input="onSearch"
+                            />
+                        </IconField>
+
+                        <Select
+                            v-model="lazyParams.role"
+                            :options="roles"
+                            option-label="label"
+                            option-value="value"
+                            placeholder="Role"
+                            class="w-full md:w-48"
+                            @change="onSearch"
+                        />
+
+                        <Button
+                            icon="pi pi-filter-slash"
+                            label="Reset"
+                            outlined
+                            severity="secondary"
+                            class="rounded-2xl"
+                            @click="onClearFilter"
+                        />
+                    </div>
+                </div>
             </div>
 
             <DataTable
@@ -310,14 +351,16 @@ const getSeverity = (user) => {
                             <Button
                                 label="Update User Info"
                                 icon="fa-solid fa-pen-to-square"
-                                severity="confirm"
+                                severity="secondary"
+                                outlined
                                 @click="openEditDialog(selectedRow)"
                             />
 
                             <Button
                                 label="Change Password"
                                 icon="fa-solid fa-lock"
-                                severity="contrast"
+                                severity="secondary"
+                                outlined
                                 @click="openChangePasswordDialog(selectedRow)"
                             />
                         </div>
@@ -330,27 +373,6 @@ const getSeverity = (user) => {
                         />
                     </div>
                 </Drawer>
-
-                <!-- <Column header="Actions" class="w-36">
-                    <template #body="{ data }">
-                        <div class="flex gap-2">
-                            <Button
-                                icon="pi pi-pencil"
-                                severity="secondary"
-                                text
-                                rounded
-                                @click="openEditDialog(data)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                severity="danger"
-                                text
-                                rounded
-                                @click="confirmDelete(data)"
-                            />
-                        </div>
-                    </template>
-                </Column> -->
             </DataTable>
         </div>
 

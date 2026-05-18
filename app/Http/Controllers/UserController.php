@@ -22,8 +22,12 @@ class UserController extends Controller
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('phone', 'like', "%{$search}%")
+                    ;
                 });
+            })
+            ->when($request->role, function ($query, $role) {
+                $query->where('role', $role);
             })
             ->where('id', '!=', Auth::id())
             ->latest()
