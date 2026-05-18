@@ -4,20 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Bill;
 use App\Models\Booking;
-use DateTime;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $bills = Bill::with('billType')->get();
+        $perPage = min((int) $request->integer('per_page', 10), 100);
+        $search = $request->string('search')->toString();
+
+        $bills = Bill::query()
+            ->with([
+                'billType',
+                'booking.room.floor.building',
+                'booking.tenant:id,name,username,email,phone',
+                'creator:id,name',
+            ])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('booking.tenant', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    })->orWhereHas('booking.room', function ($query) use ($search) {
+                        $query->where('room_number', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->latest()
+            ->paginate($perPage);
         return response()->json([
-            'bills' => $bills
+            'bills' => $bills->items(),
+            'meta' => [
+                'current_page' => $bills->currentPage(),
+                'per_page' => $bills->perPage(),
+                'total' => $bills->total(),
+                'last_page' => $bills->lastPage(),
+                'total_bills' => Bill::count(),
+                'total_amount' => Bill::sum('amount'),
+            ],
         ], 200);
     }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -25,41 +56,111 @@ class BillController extends Controller
             'booking_id' => ['required', 'exists:bookings,id'],
             'amount' => ['nullable', 'numeric'],
             'bill_date' => ['required', 'date'],
-            // 'created_by' => ['required', 'exists:users,id'],
             // bill type
             'bill_details' => ['nullable', 'array'],
             'bill_details.*.type_name' => ['required', 'string'],
             'bill_details.*.previous_reading' => ['nullable', 'numeric'],
             'bill_details.*.current_reading' => ['nullable', 'numeric'],
             'bill_details.*.rate' => ['nullable', 'numeric'],
+            'bill_details.*.amount' => ['nullable', 'numeric'],
             'bill_details.*.description' => ['nullable', 'string'],
         ]);
 
         DB::transaction(function () use ($validated) {
             // 1 bill
-            $billDate = DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $validated['bill_date'])->format('Y-m-d');
             $bill = Bill::create([
                 'booking_id' => $validated['booking_id'],
                 'amount' => $validated['amount'],
-                'bill_date' => $billDate,
-                'created_by' => Auth::user()->id,
+                'bill_date' => $this->formatBillDate($validated['bill_date']),
+                'created_by' => Auth::user()?->id,
             ]);
 
-            // 2 bill type (details)
-            foreach ($validated['bill_details'] as $detail) {
-                $bill->billType()->create([
-                    'bill_id' => $bill->id,
-                    'type_name' => $detail['type_name'],
-                    'previous_reading' => $detail['previous_reading'],
-                    'current_reading' => $detail['current_reading'],
-                    'rate' => $detail['rate'],
-                    'description' => $detail['description'],
-                ]);
-            }
+            $this->saveBillDetails($bill, $validated['bill_details'] ?? []);
             Booking::where('id', $validated['booking_id'])->update(['status' => 'completed']);
         });
+
         return response()->json([
             'message' => 'Bill created successfully.',
         ], 201);
+    }
+
+    public function show(Bill $bill)
+    {
+        return response()->json([
+            'bill' => $bill->load([
+                'billType',
+                'booking.room.floor.building',
+                'booking.tenant:id,name,username,email,phone',
+                'creator:id,name',
+            ]),
+        ]);
+    }
+
+    public function update(Request $request, Bill $bill)
+    {
+        $validated = $request->validate([
+            'booking_id' => ['required', 'exists:bookings,id'],
+            'amount' => ['required', 'numeric'],
+            'bill_date' => ['required', 'date'],
+            'bill_details' => ['nullable', 'array'],
+            'bill_details.*.type_name' => ['required', 'string'],
+            'bill_details.*.previous_reading' => ['nullable', 'numeric'],
+            'bill_details.*.current_reading' => ['nullable', 'numeric'],
+            'bill_details.*.rate' => ['nullable', 'numeric'],
+            'bill_details.*.amount' => ['nullable', 'numeric'],
+            'bill_details.*.description' => ['nullable', 'string'],
+        ]);
+
+        DB::transaction(function () use ($bill, $validated) {
+            $bill->update([
+                'booking_id' => $validated['booking_id'],
+                'amount' => $validated['amount'],
+                'bill_date' => $this->formatBillDate($validated['bill_date']),
+            ]);
+
+            $bill->billType()->delete();
+            // bill type
+            $this->saveBillDetails($bill, $validated['bill_details'] ?? []);
+
+            Booking::where('id', $validated['booking_id'])->update(['status' => 'completed']);
+        });
+
+        return response()->json([
+            'message' => 'Bill updated successfully.',
+            'bill' => $bill->fresh()->load([
+                'billType',
+                'booking.room.floor.building',
+                'booking.tenant:id,name,username,email,phone',
+                'creator:id,name',
+            ]),
+        ]);
+    }
+
+    public function destroy(Bill $bill)
+    {
+        $bill->delete();
+
+        return response()->json([
+            'message' => 'Bill deleted successfully.',
+        ]);
+    }
+
+    private function formatBillDate(string $billDate): string
+    {
+        return Carbon::parse($billDate)->format('Y-m-d');
+    }
+
+    private function saveBillDetails(Bill $bill, array $details): void
+    {
+        foreach ($details as $detail) {
+            $bill->billType()->create([
+                'type_name' => $detail['type_name'],
+                'previous_reading' => $detail['previous_reading'] ?? 0,
+                'current_reading' => $detail['current_reading'] ?? 0,
+                'rate' => $detail['rate'] ?? 0,
+                'amount' => $detail['amount'] ?? 0,
+                'description' => $detail['description'] ?? null,
+            ]);
+        }
     }
 }

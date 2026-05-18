@@ -9,6 +9,19 @@ const useBillStore = defineStore("bill", () => {
     const saving = ref(false);
     const deleting = ref(false);
 
+    const fetchBills = async (params = {}) => {
+        loading.value = true;
+
+        try {
+            const { data } = await billService.fetch(params);
+            bills.value = data.bills;
+            meta.value = data.meta || {};
+            return data;
+        } finally {
+            loading.value = false;
+        }
+    };
+
     const createBill = async (payload) => {
         saving.value = true;
         try {
@@ -21,13 +34,39 @@ const useBillStore = defineStore("bill", () => {
             saving.value = false;
         }
     };
+
+    const updateBill = async (id, payload) => {
+        saving.value = true;
+
+        try {
+            const { data } = await billService.update(id, payload);
+            return data;
+        } finally {
+            saving.value = false;
+        }
+    };
+
+    const deleteBill = async (id) => {
+        deleting.value = true;
+
+        try {
+            const { data } = await billService.delete(id);
+            return data;
+        } finally {
+            deleting.value = false;
+        }
+    };
+
     return {
         bills,
         meta,
         loading,
         saving,
         deleting,
+        fetchBills,
         createBill,
+        updateBill,
+        deleteBill,
     };
 });
 

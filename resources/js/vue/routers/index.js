@@ -8,6 +8,7 @@ import Building from "../pages/building/Building.vue";
 import Floors from "../pages/floors/Floors.vue";
 import Rooms from "../pages/rooms/Rooms.vue";
 import Booking from "../pages/booking/Booking.vue";
+import Bill from "../pages/bill/Bill.vue";
 
 const routes = [
     // { path: "/", component: Home },
@@ -25,6 +26,7 @@ const routes = [
             { path: "floors", name: "floors", component: Floors },
             { path: "rooms", name: "rooms", component: Rooms },
             { path: "bookings", name: "bookings", component: Booking },
+            { path: "bills", name: "bills", component: Bill },
         ],
     },
 ];

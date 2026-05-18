@@ -31,6 +31,12 @@ const navigation = [
         icon: "fa-solid fa-calendar-check",
         to: { name: "bookings" },
     },
+    {
+        label: "Bill",
+        icon: "fa-solid fa-file-invoice",
+        to: { name: "bills" },
+    },
+
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },
     // { label: "Reports", icon: "pi pi-file", to: "/reports" },
 ];
