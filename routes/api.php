@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\FloorController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +28,10 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/buildings', BuildingController::class);
         // floor
         Route::apiResource('/floors', FloorController::class);
+        // room types
+        Route::apiResource('/room-types', RoomTypeController::class);
+        // rooms
+        Route::apiResource('/rooms', RoomController::class);
         // Logout route
         Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     });

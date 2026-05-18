@@ -22,10 +22,10 @@ const navigation = [
     },
     {
         label: "Floors",
-        icon: "fa-solid fa-building-columns",
+        icon: "fa-solid fa-layer-group",
         to: { name: "floors" },
     },
-    // { label: "Rooms", icon: "pi pi-home", to: "/rooms" },
+    { label: "Rooms", icon: "fa-solid fa-bed", to: { name: "rooms" } },
     // { label: "Bookings", icon: "pi pi-calendar", to: "/bookings" },
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },
     // { label: "Reports", icon: "pi pi-file", to: "/reports" },
