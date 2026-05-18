@@ -36,8 +36,11 @@ const navigation = [
         icon: "fa-solid fa-file-invoice",
         to: { name: "bills" },
     },
-
-    // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },
+    {
+        label: "Payments",
+        icon: "fa-solid fa-money-check-dollar",
+        to: { name: "payments" },
+    },
     // { label: "Reports", icon: "pi pi-file", to: "/reports" },
 ];
 </script>

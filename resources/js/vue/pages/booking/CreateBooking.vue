@@ -37,10 +37,12 @@ const statusOptions = [
 ];
 
 const roomOptions = computed(() =>
-    rooms.value.map((room) => ({
-        ...room,
-        label: `${room.floor?.building?.building_name || "Building"} - ${room.floor?.name} - ${room.room_number}`,
-    })),
+    rooms.value
+        .filter((room) => room.status === "available")
+        .map((room) => ({
+            ...room,
+            label: `${room.floor?.building?.building_name || "Building"} - ${room.floor?.name} - ${room.room_number}`,
+        })),
 );
 
 const tenantOptions = computed(() =>
@@ -57,7 +59,7 @@ const errorFor = (field) => {
 
 onMounted(async () => {
     await Promise.all([
-        roomStore.fetchRooms({ per_page: 100 }),
+        roomStore.fetchRooms({ per_page: 100, status: "available" }),
         userStore.fetchUsers({ per_page: 100, role: "user" }),
     ]);
 });

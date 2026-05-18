@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
 {
@@ -65,7 +68,14 @@ class BookingController extends Controller
 
         $data['created_by'] = $request->user()?->id;
 
-        $booking = Booking::create($data);
+        $booking = DB::transaction(function () use ($data) {
+            $this->ensureRoomCanBeBooked($data['room_id']);
+
+            $booking = Booking::create($data);
+            $this->syncRoomStatus($booking);
+
+            return $booking;
+        });
 
         return response()->json([
             'message' => 'Booking created successfully.',
@@ -90,7 +100,21 @@ class BookingController extends Controller
             'status' => ['required', Rule::in(['pending', 'active', 'completed'])],
         ]);
 
-        $booking->update($data);
+        DB::transaction(function () use ($booking, $data) {
+            $oldRoomId = $booking->room_id;
+
+            if (in_array($data['status'], ['pending', 'active'], true)) {
+                $this->ensureRoomCanBeBooked($data['room_id'], $booking->id);
+            }
+
+            $booking->update($data);
+
+            if ($oldRoomId !== (int) $data['room_id']) {
+                $this->releaseRoomIfNoActiveBooking($oldRoomId);
+            }
+
+            $this->syncRoomStatus($booking->fresh());
+        });
 
         return response()->json([
             'message' => 'Booking updated successfully.',
@@ -100,10 +124,71 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
-        $booking->delete();
+        DB::transaction(function () use ($booking) {
+            $roomId = $booking->room_id;
+            $booking->delete();
+            $this->releaseRoomIfNoActiveBooking($roomId);
+        });
 
         return response()->json([
             'message' => 'Booking deleted successfully.',
         ]);
+    }
+
+    private function ensureRoomCanBeBooked(int $roomId, ?int $ignoreBookingId = null): void
+    {
+        $room = Room::lockForUpdate()->findOrFail($roomId);
+        $hasActiveBooking = Booking::query()
+            ->where('room_id', $roomId)
+            ->whereIn('status', ['pending', 'active'])
+            ->when($ignoreBookingId, fn($query) => $query->whereKeyNot($ignoreBookingId))
+            ->exists();
+
+        if ($room->status !== 'available' && !$this->roomBelongsToIgnoredBooking($roomId, $ignoreBookingId)) {
+            throw ValidationException::withMessages([
+                'room_id' => ['This room is not available for booking.'],
+            ]);
+        }
+
+        if ($hasActiveBooking) {
+            throw ValidationException::withMessages([
+                'room_id' => ['This room already has an active or pending booking.'],
+            ]);
+        }
+    }
+
+    private function syncRoomStatus(Booking $booking): void
+    {
+        $status = match ($booking->status) {
+            'pending' => 'reserved',
+            'active' => 'occupied',
+            default => 'available',
+        };
+
+        $booking->room()->update(['status' => $status]);
+    }
+
+    private function releaseRoomIfNoActiveBooking(int $roomId): void
+    {
+        $hasActiveBooking = Booking::query()
+            ->where('room_id', $roomId)
+            ->whereIn('status', ['pending', 'active'])
+            ->exists();
+
+        if (!$hasActiveBooking) {
+            Room::whereKey($roomId)->update(['status' => 'available']);
+        }
+    }
+
+    private function roomBelongsToIgnoredBooking(int $roomId, ?int $ignoreBookingId): bool
+    {
+        if (!$ignoreBookingId) {
+            return false;
+        }
+
+        return Booking::query()
+            ->whereKey($ignoreBookingId)
+            ->where('room_id', $roomId)
+            ->exists();
     }
 }

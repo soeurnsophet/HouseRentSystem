@@ -38,10 +38,15 @@ const statusOptions = [
 ];
 
 const roomOptions = computed(() =>
-    rooms.value.map((room) => ({
-        ...room,
-        label: `${room.floor?.building?.building_name || "Building"} - ${room.floor?.name} - ${room.room_number}`,
-    })),
+    rooms.value
+        .filter(
+            (room) =>
+                room.status === "available" || room.id === booking.room_id,
+        )
+        .map((room) => ({
+            ...room,
+            label: `${room.floor?.building?.building_name || "Building"} - ${room.floor?.name} - ${room.room_number}`,
+        })),
 );
 
 const tenantOptions = computed(() =>

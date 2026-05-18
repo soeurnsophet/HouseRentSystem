@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['booking_id', 'amount', 'bill_date', 'created_by'])]
+#[Fillable(['booking_id', 'amount', 'bill_date', 'status', 'created_by'])]
 class Bill extends Model
 {
     public function booking()

@@ -1,14 +1,19 @@
 <script setup>
-import { inject, onMounted, ref } from "vue";
+import { defineAsyncComponent, inject, onMounted, ref } from "vue";
 import useBuildingStore from "../../stores/building.store";
 import { storeToRefs } from "pinia";
 
 import Message from "primevue/message";
 import useFloorStore from "../../stores/floor.store";
 import { MessageSuccess } from "../../utils/Message";
-import { useToast } from "primevue";
+import { useDialog, useToast } from "primevue";
+
+const CreateBuilding = defineAsyncComponent(
+    () => import("../building/CreateBuilding.vue"),
+);
 
 const toast = useToast();
+const dialog = useDialog();
 const buildingStore = useBuildingStore();
 const { buildings } = storeToRefs(buildingStore);
 const floorStore = useFloorStore();
@@ -71,6 +76,28 @@ const submit = async () => {
 
     dialogRef.value.close({ created: true });
 };
+
+const openCreateBuildingDialog = () => {
+    dialog.open(CreateBuilding, {
+        props: {
+            position: "top",
+            header: "Add Building",
+            modal: true,
+            style: { width: "42rem" },
+            breakpoints: { "960px": "75vw", "640px": "92vw" },
+            draggable: false,
+        },
+        onClose: async (options) => {
+            if (options?.data?.created) {
+                await buildingStore.fetchBuildings();
+
+                if (options.data.building?.id) {
+                    form.value.building_id = options.data.building.id;
+                }
+            }
+        },
+    });
+};
 </script>
 
 <template>
@@ -94,14 +121,23 @@ const submit = async () => {
             <!-- Building -->
             <div>
                 <label class="block text-sm font-medium mb-1">Building</label>
-                <Select
-                    v-model="form.building_id"
-                    class="w-full"
-                    :options="buildings"
-                    option-label="building_name"
-                    option-value="id"
-                    placeholder="Select building"
-                />
+                <InputGroup>
+                    <Select
+                        v-model="form.building_id"
+                        class="w-full"
+                        :options="buildings"
+                        option-label="building_name"
+                        option-value="id"
+                        placeholder="Select building"
+                    />
+                    <InputGroupAddon>
+                        <Button
+                            icon="fa-solid fa-building-circle-plus"
+                            type="button"
+                            @click="openCreateBuildingDialog"
+                        />
+                    </InputGroupAddon>
+                </InputGroup>
 
                 <Message
                     v-if="errors.building_id"

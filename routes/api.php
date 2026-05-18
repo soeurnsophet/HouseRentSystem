@@ -4,6 +4,7 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FloorController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\UserController;
@@ -38,6 +39,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/bookings', BookingController::class);
         // billing
         Route::apiResource('/bills', BillController::class);
+        // payments
+        Route::apiResource('/payments', PaymentController::class);
         // Logout route
         Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     });

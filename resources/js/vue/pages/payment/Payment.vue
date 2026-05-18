@@ -2,51 +2,38 @@
 import { computed, defineAsyncComponent, onMounted, reactive, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useConfirm, useDialog, useToast } from "primevue";
-import useBillStore from "../../stores/bill.store";
+import usePaymentStore from "../../stores/payment.store";
 import { MessageSuccess } from "../../utils/Message";
 
-const UpdateBill = defineAsyncComponent(() => import("./UpdateBill.vue"));
+const CreatePayment = defineAsyncComponent(() => import("./CreatePayment.vue"));
+const UpdatePayment = defineAsyncComponent(() => import("./UpdatePayment.vue"));
 
-const billStore = useBillStore();
-const { bills, meta, loading } = storeToRefs(billStore);
+const paymentStore = usePaymentStore();
+const { payments, meta, loading } = storeToRefs(paymentStore);
 const dialog = useDialog();
 const confirm = useConfirm();
 const toast = useToast();
 const menu = ref();
-const selectedBill = ref(null);
+const selectedPayment = ref(null);
 
 const lazyParams = reactive({
     first: 0,
     page: 0,
     rows: 10,
     search: "",
-    status: null,
     totalRecords: 0,
 });
 
 const summary = computed(() => ({
-    total: meta.value.total_bills || lazyParams.totalRecords,
-    pending: meta.value.pending_bills || 0,
-    paid: meta.value.paid_bills || 0,
-    amount: Number(meta.value.total_amount || 0),
+    total: meta.value.total_payments || lazyParams.totalRecords,
+    paid: Number(meta.value.total_paid || 0),
 }));
 
-const statusOptions = [
-    { label: "Pending", value: "pending" },
-    { label: "Paid", value: "paid" },
-];
-
-const statusSeverity = {
-    pending: "warn",
-    paid: "success",
-};
-
-const fetchBills = async () => {
-    await billStore.fetchBills({
+const fetchPayments = async () => {
+    await paymentStore.fetchPayments({
         page: lazyParams.page + 1,
         per_page: lazyParams.rows,
         search: lazyParams.search || undefined,
-        status: lazyParams.status || undefined,
     });
 
     lazyParams.totalRecords = meta.value.total || 0;
@@ -58,7 +45,7 @@ const onSearch = () => {
     searchTimer = setTimeout(() => {
         lazyParams.first = 0;
         lazyParams.page = 0;
-        fetchBills();
+        fetchPayments();
     }, 300);
 };
 
@@ -66,43 +53,60 @@ const onPage = (event) => {
     lazyParams.first = event.first;
     lazyParams.page = event.page;
     lazyParams.rows = event.rows;
-    fetchBills();
+    fetchPayments();
 };
 
 const clearFilters = () => {
     lazyParams.first = 0;
     lazyParams.page = 0;
     lazyParams.search = "";
-    lazyParams.status = null;
-    fetchBills();
+    fetchPayments();
+};
+
+const openCreateDialog = () => {
+    dialog.open(CreatePayment, {
+        props: {
+            position: "top",
+            header: "Record Payment",
+            modal: true,
+            style: { width: "42rem" },
+            breakpoints: { "960px": "75vw", "640px": "92vw" },
+            draggable: false,
+        },
+        onClose: (options) => {
+            if (options?.data?.created) {
+                fetchPayments();
+            }
+        },
+    });
 };
 
 const openUpdateDialog = () => {
-    if (!selectedBill.value) return;
+    if (!selectedPayment.value) return;
 
-    dialog.open(UpdateBill, {
-        data: { bill: selectedBill.value },
+    dialog.open(UpdatePayment, {
+        data: { payment: selectedPayment.value },
         props: {
             position: "top",
-            header: "Update Bill",
+            header: "Update Payment",
             modal: true,
-            style: { width: "46rem" },
+            style: { width: "42rem" },
             breakpoints: { "960px": "75vw", "640px": "92vw" },
             draggable: false,
         },
         onClose: (options) => {
             if (options?.data?.updated) {
-                fetchBills();
+                fetchPayments();
             }
         },
     });
 };
 
 const confirmDelete = () => {
-    if (!selectedBill.value) return;
+    if (!selectedPayment.value) return;
 
     confirm.require({
-        message: `Are you sure you want to delete this bill for ${selectedBill.value.booking?.tenant?.name || "this tenant"}?`,
+        message: `Are you sure you want to delete this payment from ${selectedPayment.value.bill?.booking?.tenant?.name || "this tenant"}?`,
         header: "Delete Confirmation",
         icon: "fa-solid fa-triangle-exclamation",
         rejectProps: {
@@ -117,15 +121,17 @@ const confirmDelete = () => {
             severity: "danger",
         },
         accept: async () => {
-            const res = await billStore.deleteBill(selectedBill.value.id);
+            const res = await paymentStore.deletePayment(
+                selectedPayment.value.id,
+            );
             MessageSuccess("", res.message, toast);
 
-            if (bills.value.length === 1 && lazyParams.page > 0) {
+            if (payments.value.length === 1 && lazyParams.page > 0) {
                 lazyParams.page -= 1;
                 lazyParams.first = lazyParams.page * lazyParams.rows;
             }
 
-            await fetchBills();
+            await fetchPayments();
         },
     });
 };
@@ -148,8 +154,8 @@ const actionItems = ref([
     },
 ]);
 
-const toggle = (event, bill) => {
-    selectedBill.value = bill;
+const toggle = (event, payment) => {
+    selectedPayment.value = payment;
     menu.value.toggle(event);
 };
 
@@ -169,8 +175,13 @@ const formatCurrency = (value) =>
         currency: "USD",
     }).format(Number(value || 0));
 
-const roomLabel = (bill) => {
-    const room = bill.booking?.room;
+const methodLabel = (method) =>
+    String(method || "-")
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const roomLabel = (payment) => {
+    const room = payment.bill?.booking?.room;
     const building = room?.floor?.building?.building_name;
 
     if (!room) return "-";
@@ -178,7 +189,7 @@ const roomLabel = (bill) => {
     return `${building ? `${building} / ` : ""}Room ${room.room_number}`;
 };
 
-onMounted(fetchBills);
+onMounted(fetchPayments);
 </script>
 
 <template>
@@ -188,19 +199,25 @@ onMounted(fetchBills);
         >
             <div>
                 <h1 class="mt-2 text-3xl font-semibold text-slate-950">
-                    Bills
+                    Payments
                 </h1>
                 <p class="mt-2 text-sm text-slate-600">
-                    Review tenant bills and keep charges up to date.
+                    Record rent payments and review payment history.
                 </p>
             </div>
+
+            <Button
+                label="Record Payment"
+                icon="fa-solid fa-money-bill-wave"
+                @click="openCreateDialog"
+            />
         </div>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div
                 class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
             >
-                <p class="text-sm text-slate-500">Total Bills</p>
+                <p class="text-sm text-slate-500">Total Payments</p>
                 <p class="mt-1 text-2xl font-semibold text-slate-950">
                     {{ summary.total }}
                 </p>
@@ -208,25 +225,9 @@ onMounted(fetchBills);
             <div
                 class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
             >
-                <p class="text-sm text-slate-500">Pending</p>
-                <p class="mt-1 text-2xl font-semibold text-amber-700">
-                    {{ summary.pending }}
-                </p>
-            </div>
-            <div
-                class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-            >
-                <p class="text-sm text-slate-500">Paid</p>
+                <p class="text-sm text-slate-500">Total Paid</p>
                 <p class="mt-1 text-2xl font-semibold text-emerald-700">
-                    {{ summary.paid }}
-                </p>
-            </div>
-            <div
-                class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-            >
-                <p class="text-sm text-slate-500">Total Amount</p>
-                <p class="mt-1 text-2xl font-semibold text-emerald-700">
-                    {{ formatCurrency(summary.amount) }}
+                    {{ formatCurrency(summary.paid) }}
                 </p>
             </div>
         </div>
@@ -240,22 +241,11 @@ onMounted(fetchBills);
                     <InputText
                         v-model="lazyParams.search"
                         class="w-full"
-                        placeholder="Search tenant or room"
+                        placeholder="Search tenant, room, or method"
                         @input="onSearch"
                         @keydown.enter="onSearch"
                     />
                 </IconField>
-
-                <Select
-                    v-model="lazyParams.status"
-                    :options="statusOptions"
-                    option-label="label"
-                    option-value="value"
-                    placeholder="Status"
-                    class="w-full md:w-44"
-                    show-clear
-                    @change="onSearch"
-                />
 
                 <Button
                     icon="fa-solid fa-filter-circle-xmark"
@@ -267,16 +257,16 @@ onMounted(fetchBills);
             </div>
 
             <DataTable
-                :value="bills"
+                :value="payments"
                 :loading="loading"
                 lazy
-                :paginator="bills.length > 0"
+                :paginator="payments.length > 0"
                 :first="lazyParams.first"
                 :rows="lazyParams.rows"
                 :total-records="lazyParams.totalRecords"
                 :rows-per-page-options="[10, 25, 50]"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} bills"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} payments"
                 data-key="id"
                 responsive-layout="scroll"
                 class="p-datatable-sm"
@@ -289,13 +279,13 @@ onMounted(fetchBills);
                         class="flex flex-col items-center justify-center py-16 text-center"
                     >
                         <i
-                            class="fa-solid fa-file-invoice-dollar text-5xl text-slate-300"
+                            class="fa-solid fa-money-check-dollar text-5xl text-slate-300"
                         ></i>
                         <p class="mt-4 text-lg font-semibold text-slate-800">
-                            No bills found
+                            No payments found
                         </p>
                         <p class="mt-1 text-sm text-slate-500">
-                            Create a bill from a booking first.
+                            Record a payment after a bill has been created.
                         </p>
                     </div>
                 </template>
@@ -310,12 +300,12 @@ onMounted(fetchBills);
                     <template #body="{ data }">
                         <div>
                             <p class="font-semibold text-slate-900">
-                                {{ data.booking?.tenant?.name || "-" }}
+                                {{ data.bill?.booking?.tenant?.name || "-" }}
                             </p>
                             <p class="text-sm text-slate-500">
                                 {{
-                                    data.booking?.tenant?.phone ||
-                                    data.booking?.tenant?.email ||
+                                    data.bill?.booking?.tenant?.phone ||
+                                    data.bill?.booking?.tenant?.email ||
                                     "-"
                                 }}
                             </p>
@@ -329,9 +319,19 @@ onMounted(fetchBills);
                     </template>
                 </Column>
 
-                <Column header="Bill Date">
+                <Column header="Payment Date">
                     <template #body="{ data }">
-                        {{ formatDate(data.bill_date) }}
+                        {{ formatDate(data.payment_date) }}
+                    </template>
+                </Column>
+
+                <Column header="Method">
+                    <template #body="{ data }">
+                        <Tag
+                            :value="methodLabel(data.payment_method)"
+                            severity="info"
+                            rounded
+                        />
                     </template>
                 </Column>
 
@@ -343,31 +343,7 @@ onMounted(fetchBills);
                     </template>
                 </Column>
 
-                <Column header="Status">
-                    <template #body="{ data }">
-                        <Tag
-                            :value="data.status"
-                            :severity="statusSeverity[data.status] || 'info'"
-                            rounded
-                        />
-                    </template>
-                </Column>
-
-                <Column header="Details">
-                    <template #body="{ data }">
-                        <div class="flex flex-wrap gap-2">
-                            <Tag
-                                v-for="detail in data.bill_type"
-                                :key="detail.id"
-                                :value="detail.type_name"
-                                severity="secondary"
-                                rounded
-                            />
-                        </div>
-                    </template>
-                </Column>
-
-                <!-- <Column header="Actions" class="w-20">
+                <Column header="Actions" class="w-20">
                     <template #body="{ data }">
                         <div class="flex justify-center">
                             <Button
@@ -376,17 +352,17 @@ onMounted(fetchBills);
                                 text
                                 rounded
                                 aria-haspopup="true"
-                                aria-controls="bill_menu"
+                                aria-controls="payment_menu"
                                 @click="toggle($event, data)"
                             />
                         </div>
                     </template>
-                </Column> -->
+                </Column>
             </DataTable>
 
             <Menu
                 ref="menu"
-                id="bill_menu"
+                id="payment_menu"
                 :model="actionItems"
                 :popup="true"
             />

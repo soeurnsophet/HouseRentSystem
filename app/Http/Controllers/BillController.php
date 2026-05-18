@@ -17,12 +17,17 @@ class BillController extends Controller
         $search = $request->string('search')->toString();
 
         $bills = Bill::query()
+            ->withSum('payments as paid_amount', 'amount')
             ->with([
                 'billType',
+                'payments',
                 'booking.room.floor.building',
                 'booking.tenant:id,name,username,email,phone',
                 'creator:id,name',
             ])
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->whereHas('booking.tenant', function ($query) use ($search) {
@@ -44,6 +49,8 @@ class BillController extends Controller
                 'total' => $bills->total(),
                 'last_page' => $bills->lastPage(),
                 'total_bills' => Bill::count(),
+                'pending_bills' => Bill::where('status', 'pending')->count(),
+                'paid_bills' => Bill::where('status', 'paid')->count(),
                 'total_amount' => Bill::sum('amount'),
             ],
         ], 200);
@@ -72,11 +79,12 @@ class BillController extends Controller
                 'booking_id' => $validated['booking_id'],
                 'amount' => $validated['amount'],
                 'bill_date' => $this->formatBillDate($validated['bill_date']),
+                'status' => 'pending',
                 'created_by' => Auth::user()?->id,
             ]);
 
             $this->saveBillDetails($bill, $validated['bill_details'] ?? []);
-            Booking::where('id', $validated['booking_id'])->update(['status' => 'completed']);
+            $this->activateBooking($validated['booking_id']);
         });
 
         return response()->json([
@@ -89,6 +97,7 @@ class BillController extends Controller
         return response()->json([
             'bill' => $bill->load([
                 'billType',
+                'payments',
                 'booking.room.floor.building',
                 'booking.tenant:id,name,username,email,phone',
                 'creator:id,name',
@@ -122,13 +131,15 @@ class BillController extends Controller
             // bill type
             $this->saveBillDetails($bill, $validated['bill_details'] ?? []);
 
-            Booking::where('id', $validated['booking_id'])->update(['status' => 'completed']);
+            $this->activateBooking($validated['booking_id']);
+            $this->syncBillStatus($bill->fresh());
         });
 
         return response()->json([
             'message' => 'Bill updated successfully.',
             'bill' => $bill->fresh()->load([
                 'billType',
+                'payments',
                 'booking.room.floor.building',
                 'booking.tenant:id,name,username,email,phone',
                 'creator:id,name',
@@ -162,5 +173,31 @@ class BillController extends Controller
                 'description' => $detail['description'] ?? null,
             ]);
         }
+    }
+
+
+    private function activateBooking(int $bookingId): void
+    {
+        $booking = Booking::with('room')->findOrFail($bookingId);
+        $booking->update(['status' => 'active']);
+        $booking->room()->update(['status' => 'occupied']);
+    }
+
+    private function syncBillStatus(Bill $bill): void
+    {
+        $status = $bill->payments()->exists() ? 'paid' : 'pending';
+
+        $bill->update(['status' => $status]);
+
+        if ($status === 'paid') {
+            $this->completeBooking($bill->booking_id);
+        }
+    }
+
+    private function completeBooking(int $bookingId): void
+    {
+        $booking = Booking::with('room')->findOrFail($bookingId);
+        $booking->update(['status' => 'completed']);
+        $booking->room()->update(['status' => 'available']);
     }
 }

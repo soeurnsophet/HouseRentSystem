@@ -49,7 +49,7 @@ const submit = async () => {
     try {
         const res = await buildingStore.createBuilding(form.value);
         MessageSuccess("", res.message, toast);
-        dialogRef.value.close({ created: true });
+        dialogRef.value.close({ created: true, building: res.building });
     } catch (error) {
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors;

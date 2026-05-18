@@ -22,6 +22,8 @@ return new class extends Migration
 
             $table->date('bill_date');
 
+            $table->enum('status', ['pending', 'paid'])->default('pending');
+
             $table->foreignId('created_by')
                 ->nullable()
                 ->constrained('users')

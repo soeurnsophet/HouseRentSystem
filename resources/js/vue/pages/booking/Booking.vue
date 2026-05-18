@@ -133,7 +133,7 @@ const openCreateDialog = () => {
         },
         onClose: (options) => {
             if (options?.data?.created) {
-                fetchBookings();
+                refreshAll();
             }
         },
     });
@@ -154,7 +154,7 @@ const openUpdateDialog = () => {
         },
         onClose: (options) => {
             if (options?.data?.updated) {
-                fetchBookings();
+                refreshAll();
             }
         },
     });
@@ -189,7 +189,7 @@ const confirmDelete = () => {
                 lazyParams.first = lazyParams.page * lazyParams.rows;
             }
 
-            await fetchBookings();
+            await refreshAll();
         },
     });
 };
@@ -210,7 +210,7 @@ const openCreateBillDialog = () => {
         },
         onClose: (options) => {
             if (options?.data?.created) {
-                fetchBookings();
+                refreshAll();
             }
         },
     });
