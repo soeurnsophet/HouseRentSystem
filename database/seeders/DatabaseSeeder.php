@@ -20,9 +20,9 @@ class DatabaseSeeder extends Seeder
 
         // User::factory(500)->create();
 
-        // $this->call([
-        //     GenderSeeder::class,
-        // ]);
+        $this->call([
+            GenderSeeder::class,
+        ]);
 
         User::factory()->create([
             'name' => 'Soeurn Sophet',

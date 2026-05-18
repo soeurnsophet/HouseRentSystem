@@ -15,4 +15,6 @@
 .p-datatable-table-container .p-datatable-table .p-datatable-thead > tr > th {
     background-color: #5fca95;
     /* border-color: #5c9b7b; */
+    padding: 0.7rem !important;
+    text-align: center;
 }

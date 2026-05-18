@@ -6,6 +6,7 @@ import useBookingStore from "../../stores/booking.store";
 import useRoomStore from "../../stores/room.store";
 import useUserStore from "../../stores/users.store";
 import { MessageSuccess } from "../../utils/Message";
+import CreateBill from "../bill/CreateBill.vue";
 
 const CreateBooking = defineAsyncComponent(() => import("./CreateBooking.vue"));
 const UpdateBooking = defineAsyncComponent(() => import("./UpdateBooking.vue"));
@@ -42,8 +43,8 @@ const statusOptions = [
 
 const statusSeverity = {
     pending: "warn",
-    active: "success",
-    completed: "secondary",
+    active: "info",
+    completed: "success",
 };
 
 const roomOptions = computed(() =>
@@ -193,10 +194,37 @@ const confirmDelete = () => {
     });
 };
 
+// Bill
+const openCreateBillDialog = () => {
+    if (!selectedBooking.value) return;
+
+    dialog.open(CreateBill, {
+        data: { booking: selectedBooking.value },
+        props: {
+            position: "top",
+            header: "Create Bill",
+            modal: true,
+            style: { width: "42rem" },
+            breakpoints: { "960px": "75vw", "640px": "92vw" },
+            draggable: false,
+        },
+        onClose: (options) => {
+            if (options?.data?.created) {
+                fetchBookings();
+            }
+        },
+    });
+};
+
 const actionItems = ref([
     {
         label: "Actions",
         items: [
+            {
+                label: "Create Bill",
+                icon: "fa-solid fa-file-invoice",
+                command: openCreateBillDialog,
+            },
             {
                 label: "Edit",
                 icon: "fa-solid fa-pen",
@@ -212,6 +240,7 @@ const actionItems = ref([
 ]);
 
 const toggle = (event, booking) => {
+    selectedBooking.value = null;
     selectedBooking.value = booking;
     menu.value.toggle(event);
 };

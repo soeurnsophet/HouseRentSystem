@@ -39,7 +39,7 @@ const statusOptions = [
 const roomOptions = computed(() =>
     rooms.value.map((room) => ({
         ...room,
-        label: `${room.room_number} - ${room.floor?.building?.building_name || "Building"}`,
+        label: `${room.floor?.building?.building_name || "Building"} - ${room.floor?.name} - ${room.room_number}`,
     })),
 );
 

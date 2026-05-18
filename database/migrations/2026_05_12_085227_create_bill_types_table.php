@@ -16,14 +16,13 @@ return new class extends Migration
 
             $table->string('type_name');
 
-            // $table->enum('calculation_type', [
-            //     'fixed',
-            //     'meter'
-            // ])->default('fixed');
+            $table->decimal('previous_reading', 10, 2)->nullable();
+            $table->decimal('current_reading', 10, 2)->nullable();
 
             $table->decimal('rate', 10, 2)->default(0);
 
             $table->text('description')->nullable();
+            $table->boolean('active')->default(true);
 
             $table->timestamps();
         });

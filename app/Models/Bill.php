@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['booking_id', 'bill_type_id', 'previous_reading', 'current_reading', 'amount', 'bill_date', 'created_by'])]
+#[Fillable(['booking_id', 'amount', 'bill_date', 'created_by'])]
 class Bill extends Model
 {
     public function booking()
@@ -15,7 +15,7 @@ class Bill extends Model
 
     public function billType()
     {
-        return $this->belongsTo(BillType::class);
+        return $this->hasMany(BillType::class);
     }
 
     public function creator()

@@ -38,5 +38,4 @@ body::-webkit-scrollbar-thumb {
     height: 0;
     width: 0;
 }
-
 </style>

@@ -18,15 +18,6 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->foreignId('bill_type_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->decimal('previous_reading', 10, 2)->nullable();
-            $table->decimal('current_reading', 10, 2)->nullable();
-
-            // $table->decimal('unit_used', 10, 2)->default(0);
-
             $table->decimal('amount', 10, 2);
 
             $table->date('bill_date');
