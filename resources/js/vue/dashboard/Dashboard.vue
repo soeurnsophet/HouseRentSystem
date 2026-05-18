@@ -3,14 +3,13 @@ import { onMounted, ref } from "vue";
 import Header from "../components/Header.vue";
 import Sidebar from "../components/Sidebar.vue";
 import userAuthStore from "../stores/auth.store";
-import { on } from "@primeuix/themes/aura/floatlabel";
 
 const sidebarOpen = ref(false);
 
 const auth = userAuthStore();
 
 onMounted(() => {
-    // auth.logout();
+    auth.logout();
 });
 </script>
 

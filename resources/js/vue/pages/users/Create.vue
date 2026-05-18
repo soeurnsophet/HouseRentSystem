@@ -6,6 +6,8 @@ import { MessageSuccess } from "../../utils/Message";
 import { useToast } from "primevue";
 
 const dialogRef = inject("dialogRef");
+const dialogData = dialogRef.value?.data || {};
+const lockedRole = dialogData.role || null;
 const userStore = useUserStore();
 const { saving } = storeToRefs(userStore);
 const errors = ref({});
@@ -16,7 +18,7 @@ const form = reactive({
     email: "",
     phone: "",
     password: "",
-    role: "user",
+    role: lockedRole || "user",
     gender_id: null,
 });
 
@@ -45,7 +47,7 @@ const createUser = async () => {
         console.log(res);
 
         if (res.success) MessageSuccess("", res.message, toast);
-        dialogRef.value.close({ created: true });
+        dialogRef.value.close({ created: true, user: res.user });
     } catch (error) {
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors;
@@ -138,7 +140,7 @@ const createUser = async () => {
             </Message>
         </div>
 
-        <div class="space-y-2">
+        <div v-if="!lockedRole" class="space-y-2">
             <label class="text-sm font-medium text-slate-700" for="create-role"
                 >Role</label
             >

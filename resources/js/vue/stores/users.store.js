@@ -37,6 +37,7 @@ const useUserStore = defineStore("users", () => {
             return {
                 success: true,
                 message: data.message,
+                user: data.user,
             };
         } finally {
             saving.value = false;

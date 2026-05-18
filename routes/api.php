@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BuildingController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FloorController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomTypeController;
@@ -32,6 +33,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/room-types', RoomTypeController::class);
         // rooms
         Route::apiResource('/rooms', RoomController::class);
+        // bookings
+        Route::apiResource('/bookings', BookingController::class);
         // Logout route
         Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     });

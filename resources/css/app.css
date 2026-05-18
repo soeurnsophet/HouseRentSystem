@@ -11,3 +11,8 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.p-datatable-table-container .p-datatable-table .p-datatable-thead > tr > th {
+    background-color: #5fca95;
+    /* border-color: #5c9b7b; */
+}
