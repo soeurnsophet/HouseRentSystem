@@ -5,7 +5,7 @@ import useBuildingStore from "../../stores/building.store";
 import { storeToRefs } from "pinia";
 import { MessageSuccess } from "../../utils/Message";
 import { useToast } from "primevue";
-// store
+
 const buildingStore = useBuildingStore();
 const { loading } = storeToRefs(buildingStore);
 const dialogRef = inject("dialogRef");
@@ -18,16 +18,20 @@ const form = ref({
 });
 const errors = ref({});
 
-// validate form
 const validated = () => {
     errors.value = {};
 
-    if (!form.value.building_name)
+    if (!form.value.building_name.trim()) {
         errors.value.building_name = "Building name is required.";
+    }
 
-    if (!form.value.address) errors.value.address = "Address is required.";
+    if (!form.value.address.trim()) {
+        errors.value.address = "Address is required.";
+    }
 
-    if (!form.value.phone) errors.value.phone = "Phone is required.";
+    if (!form.value.phone.trim()) {
+        errors.value.phone = "Phone is required.";
+    }
 
     return Object.keys(errors.value).length === 0;
 };
@@ -48,20 +52,37 @@ const submit = async () => {
     }
 };
 
-//
 const handleOnCloseDialog = () => {
     dialogRef.value.close({ updated: false });
-    form.value = {};
 };
 </script>
 
 <template>
-    <div class="space-y-6">
-        <!-- Form -->
+    <div class="space-y-5">
+        <div class="rounded-lg border border-teal-100 bg-teal-50 p-4">
+            <div class="flex items-center gap-3">
+                <span
+                    class="grid h-10 w-10 place-items-center rounded-md bg-white text-teal-700"
+                >
+                    <i class="fa-solid fa-building"></i>
+                </span>
+                <div>
+                    <p class="font-semibold text-slate-950">
+                        {{ buildingData.building_name }}
+                    </p>
+                    <p class="text-sm text-slate-600">
+                        Update building contact and location details.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <form class="space-y-6" @submit.prevent="submit">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="text-sm font-medium">Building Name</label>
+                    <label class="text-sm font-medium text-slate-700">
+                        Building Name
+                    </label>
                     <InputText
                         v-model="form.building_name"
                         class="w-full mt-1"
@@ -79,7 +100,9 @@ const handleOnCloseDialog = () => {
                 </div>
 
                 <div>
-                    <label class="text-sm font-medium">Phone</label>
+                    <label class="text-sm font-medium text-slate-700">
+                        Phone
+                    </label>
                     <InputText
                         v-model="form.phone"
                         class="w-full mt-1"
@@ -96,7 +119,9 @@ const handleOnCloseDialog = () => {
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="text-sm font-medium">Address</label>
+                    <label class="text-sm font-medium text-slate-700">
+                        Address
+                    </label>
                     <Textarea
                         v-model="form.address"
                         class="w-full mt-1"
@@ -114,12 +139,13 @@ const handleOnCloseDialog = () => {
                 </div>
             </div>
 
-            <!-- Actions -->
             <div class="mt-6 flex justify-end gap-3">
                 <Button
                     label="Cancel"
+                    icon="fa-solid fa-ban"
                     severity="secondary"
                     outlined
+                    type="button"
                     @click="handleOnCloseDialog"
                 />
 

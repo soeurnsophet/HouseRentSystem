@@ -26,7 +26,11 @@ const navigation = [
         to: { name: "floors" },
     },
     { label: "Rooms", icon: "fa-solid fa-bed", to: { name: "rooms" } },
-    // { label: "Bookings", icon: "pi pi-calendar", to: "/bookings" },
+    {
+        label: "Bookings",
+        icon: "fa-solid fa-calendar-check",
+        to: { name: "bookings" },
+    },
     // { label: "Payments", icon: "pi pi-wallet", to: "/payments" },
     // { label: "Reports", icon: "pi pi-file", to: "/reports" },
 ];

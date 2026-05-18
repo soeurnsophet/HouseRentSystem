@@ -7,6 +7,7 @@ import userAuthStore from "../stores/auth.store";
 import Building from "../pages/building/Building.vue";
 import Floors from "../pages/floors/Floors.vue";
 import Rooms from "../pages/rooms/Rooms.vue";
+import Booking from "../pages/booking/Booking.vue";
 
 const routes = [
     // { path: "/", component: Home },
@@ -23,6 +24,7 @@ const routes = [
             { path: "buildings", name: "buildings", component: Building },
             { path: "floors", name: "floors", component: Floors },
             { path: "rooms", name: "rooms", component: Rooms },
+            { path: "bookings", name: "bookings", component: Booking },
         ],
     },
 ];

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, defineAsyncComponent, onMounted } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 import useBuildingStore from "../../stores/building.store";
 import { storeToRefs } from "pinia";
 import { useConfirm, useDialog, useToast } from "primevue";
@@ -18,7 +18,36 @@ const confirm = useConfirm();
 const toast = useToast();
 // store
 const buildingStore = useBuildingStore();
-const buildings = computed(() => buildingStore.buildings);
+const { buildings, loading } = storeToRefs(buildingStore);
+const search = ref("");
+
+const filteredBuildings = computed(() => {
+    const term = search.value.trim().toLowerCase();
+
+    if (!term) return buildings.value;
+
+    return buildings.value.filter((building) => {
+        return [building.building_name, building.address, building.phone]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(term));
+    });
+});
+
+const totals = computed(() => {
+    return buildings.value.reduce(
+        (summary, building) => {
+            summary.floors += Number(building.floors_count || 0);
+            summary.rooms += Number(building.rooms_count || 0);
+            summary.available += Number(building.available_rooms || 0);
+            return summary;
+        },
+        {
+            floors: 0,
+            rooms: 0,
+            available: 0,
+        },
+    );
+});
 
 // mounted
 onMounted(async () => {
@@ -131,14 +160,17 @@ const confirmDelete = async (id) => {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
+    <section class="space-y-5">
+        <div
+            class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+        >
             <div>
-                <h1 class="text-3xl font-bold text-slate-900">Buildings</h1>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Manage all building information.
+                <h1 class="mt-2 text-3xl font-semibold text-slate-950">
+                    Buildings
+                </h1>
+                <p class="mt-2 text-sm text-slate-600">
+                    Manage building profiles, locations, floors, and room
+                    availability.
                 </p>
             </div>
 
@@ -148,91 +180,148 @@ const confirmDelete = async (id) => {
                 @click="openCreateBuildingDialog"
             />
         </div>
-        <!-- loading -->
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Buildings</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-950">
+                    {{ buildings.length }}
+                </p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Floors</p>
+                <p class="mt-2 text-2xl font-semibold text-teal-700">
+                    {{ totals.floors }}
+                </p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Rooms</p>
+                <p class="mt-2 text-2xl font-semibold text-indigo-700">
+                    {{ totals.rooms }}
+                </p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-sm font-medium text-slate-500">Available</p>
+                <p class="mt-2 text-2xl font-semibold text-emerald-700">
+                    {{ totals.available }}
+                </p>
+            </div>
+        </div>
+
         <div
-            class="card flex flex-col items-center justify-center"
-            v-if="!buildings.length"
+            class="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+        >
+            <IconField class="w-full md:max-w-sm">
+                <InputIcon class="fa-solid fa-magnifying-glass" />
+                <InputText
+                    v-model="search"
+                    class="w-full"
+                    placeholder="Search buildings"
+                />
+            </IconField>
+
+            <span class="text-sm text-slate-500">
+                Showing {{ filteredBuildings.length }} of
+                {{ buildings.length }} buildings
+            </span>
+        </div>
+
+        <div
+            v-if="loading"
+            class="flex flex-col items-center justify-center rounded-lg border border-slate-200 bg-white py-14 text-slate-500 shadow-sm"
         >
             <ProgressSpinner
-                style="width: 50px; height: 50px"
+                style="width: 44px; height: 44px"
                 strokeWidth="5"
                 fill="transparent"
                 animationDuration=".5s"
-                aria-label="Custom ProgressSpinner"
+                aria-label="Loading buildings"
             />
-            <span class="mt-2">Loading...</span>
+            <span class="mt-3 text-sm">Loading buildings...</span>
         </div>
-        <!-- Card List -->
-        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <div
-                v-for="building in buildings"
+
+        <div
+            v-else-if="!filteredBuildings.length"
+            class="flex flex-col items-center justify-center rounded-lg border border-slate-200 bg-white py-14 text-center shadow-sm"
+        >
+            <i class="fa-solid fa-building-circle-xmark text-5xl text-slate-300"></i>
+            <p class="mt-4 text-lg font-semibold text-slate-800">
+                No buildings found
+            </p>
+            <p class="mt-1 max-w-md text-sm text-slate-500">
+                Add your first building or adjust your search.
+            </p>
+        </div>
+
+        <div v-else class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <article
+                v-for="building in filteredBuildings"
                 :key="building.id"
-                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-teal-200 hover:shadow-md"
             >
-                <!-- Top -->
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-900">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <h2
+                            class="truncate text-xl font-semibold text-slate-950"
+                            :title="building.building_name"
+                        >
                             {{ building.building_name }}
                         </h2>
-
-                        <p class="mt-1 text-sm text-slate-500">
-                            <i
-                                class="fa-solid fa-location-dot mr-1 text-slate-400"
-                            ></i>
-                            {{ building.address }}
+                        <p class="mt-1 flex gap-2 text-sm text-slate-500">
+                            <i class="fa-solid fa-location-dot mt-1 text-slate-400"></i>
+                            <span class="line-clamp-2">
+                                {{ building.address || "-" }}
+                            </span>
                         </p>
                     </div>
 
                     <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-xl text-blue-600"
+                        class="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-teal-50 text-xl text-teal-700"
                     >
                         <i class="fa-solid fa-building"></i>
                     </div>
                 </div>
 
-                <!-- Info -->
                 <div class="mt-5 grid grid-cols-3 gap-3">
-                    <!-- Floors -->
                     <div
-                        class="rounded-xl bg-blue-50 p-3 text-center border border-blue-100"
+                        class="rounded-lg border border-teal-100 bg-teal-50 p-3 text-center"
                     >
-                        <p class="text-xs text-blue-600">Floors</p>
+                        <p class="text-xs font-medium text-teal-700">Floors</p>
 
-                        <h3 class="mt-1 text-lg font-bold text-blue-700">
+                        <h3 class="mt-1 text-lg font-semibold text-teal-800">
                             {{ building.floors_count || 0 }}
                         </h3>
                     </div>
 
-                    <!-- Rooms -->
                     <div
-                        class="rounded-xl bg-purple-50 p-3 text-center border border-purple-100"
+                        class="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-center"
                     >
-                        <p class="text-xs text-purple-600">Rooms</p>
+                        <p class="text-xs font-medium text-indigo-700">Rooms</p>
 
-                        <h3 class="mt-1 text-lg font-bold text-purple-700">
+                        <h3 class="mt-1 text-lg font-semibold text-indigo-800">
                             {{ building.rooms_count || 0 }}
                         </h3>
                     </div>
 
-                    <!-- Available Rooms -->
                     <div
-                        class="rounded-xl bg-emerald-50 p-3 text-center border border-emerald-100"
+                        class="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-center"
                     >
-                        <p class="text-xs text-emerald-600">Available Rooms</p>
+                        <p class="text-xs font-medium text-emerald-700">
+                            Available
+                        </p>
 
-                        <h3 class="mt-1 text-lg font-bold text-emerald-700">
+                        <h3 class="mt-1 text-lg font-semibold text-emerald-800">
                             {{ building.available_rooms || 0 }}
                         </h3>
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <div
-                    class="mt-3 flex items-center justify-between border-t border-slate-100 pt-4"
+                    class="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4"
                 >
-                    <span class="text-sm font-medium text-slate-500">
-                        Building ID #{{ building.id }}
+                    <span class="truncate text-sm font-medium text-slate-500">
+                        <i class="fa-solid fa-phone mr-1 text-slate-400"></i>
+                        {{ building.phone || "No phone" }}
                     </span>
 
                     <div class="flex gap-2">
@@ -259,7 +348,7 @@ const confirmDelete = async (id) => {
                         />
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
-    </div>
+    </section>
 </template>
